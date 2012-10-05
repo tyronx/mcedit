@@ -110,7 +110,9 @@ ESKY_OPTIONS = {
             'bundle_files': 3,
             'dll_excludes': [
                 'mswsock.dll',
-                'powrprof.dll'
+                'powrprof.dll',
+                'MSVCP90.dll',
+                'libiomp5md.dll'
             ],
             # py2app extras
             'iconfile': 'mcedit.icns',

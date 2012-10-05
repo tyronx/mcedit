@@ -836,40 +836,6 @@ class MCEdit(GLViewport):
         if mcedit.droppedLevel:
             mcedit.loadFile(mcedit.droppedLevel)
 
-        # Attempt to auto-update. This entire thing will be redone
-        # with the UI update so that it doesn't block and reports progress.
-        if hasattr(sys, 'frozen'):
-            # We're being run from a bundle, check for updates.
-            import esky
-
-            # We shouldn't be using Github for this.
-            app = esky.Esky(
-                sys.executable,
-                'https://github.com/mcedit/mcedit/downloads'
-            )
-
-            try:
-                update_version = app.find_update()
-            except:
-                # FIXME: Horrible, hacky kludge.
-                update_version = None
-                logging.exception('Error while checking for updates')
-
-            if update_version:
-                answer = albow.ask(
-                    'An updated version is available, would you like to '
-                    'download it?',
-                    [
-                        'Yes',
-                        'No',
-                    ],
-                    default=0,
-                    cancel=1
-                )
-                if answer == 'Yes':
-                    app.auto_update()
-                    raise SystemExit()
-
         if mcedit.closeMinecraftWarning:
             answer = albow.ask("Warning: You must close Minecraft completely before editing. Save corruption may result. Get Satisfaction to learn more.", ["Get Satisfaction", "Don't remind me again.", "OK"], default=1, cancel=1)
             if answer == "Get Satisfaction":

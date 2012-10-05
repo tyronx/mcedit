@@ -1865,12 +1865,13 @@ class LevelEditor(GLViewport):
             teximage[-1:] = darkColor
             teximage[:, -1:] = darkColor
             teximage[:, :2] = darkColor
-            # GL.glTexParameter(GL.GL_TEXTURE_2D,
-            #                  GL.GL_TEXTURE_MIN_FILTER,
-            #                  GL.GL_NEAREST_MIPMAP_NEAREST),
             GL.glTexParameter(GL.GL_TEXTURE_2D,
-                              GL.GL_TEXTURE_MAX_LEVEL,
-                              maxLevel - 1)
+                              GL.GL_TEXTURE_MIN_FILTER,
+                              GL.GL_NEAREST_MIPMAP_NEAREST),
+            # FIXME: Evaluate.
+            #GL.glTexParameter(GL.GL_TEXTURE_2D,
+            #                  GL.GL_TEXTURE_MAX_LEVEL,
+            #                  maxLevel - 1)
 
             for lev in range(maxLevel):
                 step = 1 << lev

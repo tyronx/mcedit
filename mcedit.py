@@ -914,7 +914,7 @@ def main(argv):
     except SystemExit:
         return 0
     except Exception, e:
-        logging.error('An unhandled error occured.', exc_info=True)
+        logging.exception('An unhandled error occured.')
         display.quit()
         return 1
     return 0

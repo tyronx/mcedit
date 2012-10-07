@@ -893,16 +893,7 @@ def main(argv):
     logger.addHandler(fh)
     logger.addHandler(ch)
 
-    try:
-        display.init()
-    except pygame.error, e:
-        os.environ['SDL_VIDEODRIVER'] = 'directx'
-        try:
-            display.init()
-        except pygame.error:
-            os.environ['SDL_VIDEODRIVER'] = 'windib'
-            display.init()
-
+    display.init()
     pygame.font.init()
 
     try:

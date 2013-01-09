@@ -16,6 +16,7 @@ import os
 import traceback
 import sys
 from albow import FloatField, IntField, AttrRef, Row, Label, Widget, TabPanel, CheckBox, Column, Button, TextFieldWrapped, input_text, TextField
+from config import Settings
 import directories
 from editortools.blockview import BlockButton
 from editortools.editortool import EditorTool
@@ -27,6 +28,8 @@ from albow.dialogs import wrapped_label, alert, Dialog
 import pymclevel
 from pymclevel import BoundingBox
 
+FilterSettings = Settings("filter")
+FilterSettings.filtersDir = FilterSettings("filters dir", os.path.join(directories.dataDir, "filters"))
 
 def alertFilterException(func):
     def _func(*args, **kw):
@@ -316,9 +319,10 @@ class FilterToolPanel(Panel):
         def changeFolder(event):
             prompt = "Input the path to your filter plugins folder here.\n"
             response = input_path(prompt, 500, self.tool.filtersDir)
-            if os.path.isdir(response):
-                self.tool.filtersDir = response
-            self.reload()
+            if response and os.path.isdir(response):
+                FilterSettings.filtersDir.set(response)
+                self.tool.reloadFilters()
+                self.reload()
 
         revealButton = Button("Reveal")
         revealButton.mouse_down = lambda x: mcplatform.platform_open(self.tool.filtersDir)
@@ -377,10 +381,9 @@ class FilterTool(EditorTool):
     tooltipText = "Filter"
     toolIconName = "filter"
 
-    filtersDir = os.path.join(directories.dataDir, "filters")
-
     def __init__(self, editor):
         EditorTool.__init__(self, editor)
+        FilterSettings.filtersDir.addObserver(self)
 
         self.filterModules = {}
 

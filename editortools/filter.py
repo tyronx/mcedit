@@ -14,14 +14,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE."""
 import collections
 import os
 import traceback
-from albow import FloatField, IntField, AttrRef, Row, Label, Widget, TabPanel, CheckBox, Column, Button, TextFieldWrapped
+import sys
+from albow import FloatField, IntField, AttrRef, Row, Label, Widget, TabPanel, CheckBox, Column, Button, TextFieldWrapped, input_text, TextField
+import directories
 from editortools.blockview import BlockButton
 from editortools.editortool import EditorTool
 from glbackground import Panel
 from mceutils import ChoiceButton, alertException, setWindowCaption, showProgress
 import mcplatform
 from operation import Operation
-from albow.dialogs import wrapped_label, alert
+from albow.dialogs import wrapped_label, alert, Dialog
 import pymclevel
 from pymclevel import BoundingBox
 
@@ -232,6 +234,40 @@ class FilterModuleOptions(Widget):
             if k in self.optionDict:
                 self.optionDict[k].set(val[k])
 
+def input_path(prompt, width, initial = "", **kwds):
+    box = Dialog(**kwds)
+    d = box.margin
+
+    def ok():
+        box.dismiss(True)
+
+    def cancel():
+        box.dismiss(False)
+
+    lb = Label(prompt)
+    lb.topleft = (d, d)
+    tf = TextField(width)
+    if initial:
+        tf.set_text(initial)
+    tf.enter_action = ok
+    tf.escape_action = cancel
+
+    okButton = Button("OK")
+    okButton.action = ok
+
+    cancelButton = Button("Cancel")
+    cancelButton.action = cancel
+
+    row = Row((cancelButton, okButton))
+
+    box.add(Column((lb, tf, row)))
+
+    tf.focus()
+    box.shrink_wrap()
+    if box.present():
+        return tf.get_text()
+    else:
+        return None
 
 class FilterToolPanel(Panel):
     def __init__(self, tool):
@@ -277,12 +313,27 @@ class FilterToolPanel(Panel):
 
         self.confirmButton = Button("Filter", action=self.tool.confirm)
 
-        filterLabel = Label("Filter:", fg_color=(177, 177, 255, 255))
-        filterLabel.mouse_down = lambda x: mcplatform.platform_open(mcplatform.filtersDir)
-        filterLabel.tooltipText = "Click to open filters folder"
+        def changeFolder(event):
+            prompt = "Input the path to your filter plugins folder here.\n"
+            response = input_path(prompt, 500, self.tool.filtersDir)
+            if os.path.isdir(response):
+                self.tool.filtersDir = response
+            self.reload()
+
+        revealButton = Button("Reveal")
+        revealButton.mouse_down = lambda x: mcplatform.platform_open(self.tool.filtersDir)
+
+        changeButton = Button("Change")
+        changeButton.mouse_down = changeFolder
+
+        filterLabel = Label("Filter:")
+
+        buttonRow = Row((Label("Plugins folder:"), revealButton, changeButton))
+
+        #filterLabel.tooltipText = "Click to open filters folder"
         filterSelectRow = Row((filterLabel, self.filterSelect))
 
-        self.add(Column((filterSelectRow, self.filterOptionsPanel, self.confirmButton)))
+        self.add(Column((filterSelectRow, buttonRow, self.filterOptionsPanel, self.confirmButton)))
 
         self.shrink_wrap()
         if self.parent:
@@ -326,6 +377,8 @@ class FilterTool(EditorTool):
     tooltipText = "Filter"
     toolIconName = "filter"
 
+    filtersDir = os.path.join(directories.dataDir, "filters")
+
     def __init__(self, editor):
         EditorTool.__init__(self, editor)
 
@@ -364,7 +417,9 @@ class FilterTool(EditorTool):
             self.panel.parent.remove(self.panel)
 
     def reloadFilters(self):
-        filterDir = mcplatform.filtersDir
+        filterDir = self.filtersDir
+        if filterDir not in sys.path:
+            sys.path.append(filterDir)
         filterFiles = os.listdir(filterDir)
         filterPyfiles = filter(lambda x: x.endswith(".py"), filterFiles)
 

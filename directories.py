@@ -79,6 +79,6 @@ def findDataDir():
     else:
         dataDir = os.getcwdu()
 
-    return dataDir
+    return os.path.normpath(dataDir) # Fix forward slashes to back slashes on win32
 
 dataDir = findDataDir()

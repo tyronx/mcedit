@@ -28,8 +28,9 @@ from albow.dialogs import wrapped_label, alert, Dialog
 import pymclevel
 from pymclevel import BoundingBox
 
+defaultFiltersDir = os.path.join(directories.dataDir, "filters")
 FilterSettings = Settings("filter")
-FilterSettings.filtersDir = FilterSettings("filters dir", os.path.join(directories.dataDir, "filters"))
+FilterSettings.filtersDir = FilterSettings("filters dir", "")
 
 def alertFilterException(func):
     def _func(*args, **kw):
@@ -289,8 +290,31 @@ class FilterToolPanel(Panel):
 
         tool = self.tool
 
+        def changeFolder(event):
+            prompt = "Input the path to your filter plugins folder here.\n"
+            response = input_path(prompt, 500, self.tool.filtersDir)
+            if response and os.path.isdir(response):
+                response = os.path.normpath(response)
+                if response == defaultFiltersDir:
+                    response = ""
+
+                FilterSettings.filtersDir.set(response)
+                self.tool.reloadFilters()
+                self.reload()
+
+        revealButton = Button("Reveal")
+        revealButton.mouse_down = lambda x: mcplatform.platform_open(self.tool.filtersDir)
+
+        changeButton = Button("Change")
+        changeButton.mouse_down = changeFolder
+
+        filterLabel = Label("Filter:")
+
+        buttonRow = Row((Label("Plugins folder:"), revealButton, changeButton))
+
         if len(tool.filterModules) is 0:
-            self.add(Label("No filter modules found!"))
+            self.add(Column((Label("No filter modules found!"), buttonRow)))
+
             self.shrink_wrap()
             return
 
@@ -315,24 +339,6 @@ class FilterToolPanel(Panel):
         self.filterSelect.selectedChoice = self.selectedFilterName
 
         self.confirmButton = Button("Filter", action=self.tool.confirm)
-
-        def changeFolder(event):
-            prompt = "Input the path to your filter plugins folder here.\n"
-            response = input_path(prompt, 500, self.tool.filtersDir)
-            if response and os.path.isdir(response):
-                FilterSettings.filtersDir.set(response)
-                self.tool.reloadFilters()
-                self.reload()
-
-        revealButton = Button("Reveal")
-        revealButton.mouse_down = lambda x: mcplatform.platform_open(self.tool.filtersDir)
-
-        changeButton = Button("Change")
-        changeButton.mouse_down = changeFolder
-
-        filterLabel = Label("Filter:")
-
-        buttonRow = Row((Label("Plugins folder:"), revealButton, changeButton))
 
         #filterLabel.tooltipText = "Click to open filters folder"
         filterSelectRow = Row((filterLabel, self.filterSelect))
@@ -383,7 +389,12 @@ class FilterTool(EditorTool):
 
     def __init__(self, editor):
         EditorTool.__init__(self, editor)
-        FilterSettings.filtersDir.addObserver(self)
+
+        def checkDefaultDir(val):
+            if val == "":
+                self.filtersDir = defaultFiltersDir
+
+        FilterSettings.filtersDir.addObserver(self, callback=checkDefaultDir)
 
         self.filterModules = {}
 

@@ -1,11 +1,9 @@
-# SethBling's SetBiome Filter
+#  ReplaceBiome Filter by TyronX, based on SethBling's SetBiome Filter
 # Directions: Just select a region and use this filter, it will apply the
 # biome to all columns within the selected region. It can be used on regions
 # of any size, they need not correspond to chunks.
 #
 # If you modify and redistribute this code, please credit SethBling
-
-# v1.1 Updated to MC 1.7 Biomes + added add replacement chance by TyronX
 
 from pymclevel import MCSchematic
 from pymclevel import TAG_Compound
@@ -14,10 +12,9 @@ from pymclevel import TAG_Byte
 from pymclevel import TAG_Byte_Array
 from pymclevel import TAG_String
 from numpy import zeros
-from random import randrange
 
 inputs = (
-    ("Biome", ("Desert",
+    ("Search for Biome", (
         "Beach",
         "Birch Forest",
         "Birch Forest Hills",
@@ -80,10 +77,72 @@ inputs = (
         "Taiga Hills",
         "End"
     )),
-    ("Replacement chance (%)", 100)
+    ("Replace with", (
+        "Beach",
+        "Birch Forest",
+        "Birch Forest Hills",
+        "Birch Forest Hills M",
+        "Birch Forest M",
+        "Cold Beach",
+        "Cold Taiga",
+        "Cold Taiga Hills",
+        "Cold Taiga M",
+        "Deep Ocean",
+        "Desert",
+        "Desert M",
+        "Desert Hills",
+        "Extreme Hills",
+        "Extreme Hills Edge",
+        "Extreme Hills M",
+        "Extreme Hills+",
+        "Extreme Hills+ M",
+        "Flower Forest",
+        "Forest",
+        "ForestHills",
+        "FrozenOcean",
+        "FrozenRiver",
+        "Ice Mountains",
+        "Ice Plains",
+        "Ice Plains Spikes",
+        "Jungle",
+        "Jungle M",
+        "Jungle Edge",
+        "Jungle Edge M",
+        "Jungle Hills",
+        "Mega Spruce Taiga",
+        "Mega Spruce Taiga Hills",
+        "Mega Taiga",
+        "Mega Taiga Hills",
+        "Mesa",
+        "Mesa (Bryce)",
+        "Mesa Plateau",
+        "Mesa Plateau F",
+        "Mesa Plateau F M",
+        "Mesa Plateau M",
+        "Mushroom Island",
+        "Mushroom Island Shore",
+        "Nether",
+        "Ocean",
+        "Plains",
+        "River",
+        "Roofed Forest",
+        "Roofed Forest M",
+        "Savanna",
+        "Savanna M",
+        "Savanna Plateau",
+        "Savanna Plateau M",
+        "Stone Beach",
+        "Sunflower Plains",
+        "Swampland",
+        "Swampland M",
+        "Taiga",
+        "Taiga M",
+        "Taiga Hills",
+        "End"
+    )),
 )
 
-biomes = {
+biomeids = {
     "Ocean":0,
     "Plains":1,
     "Desert":2,
@@ -145,11 +204,11 @@ biomes = {
     "Mesa (Bryce)":165,
     "Mesa Plateau F M":166,
     "Mesa Plateau M":167,
-    }
+}
 
 def perform(level, box, options):
-    biome = biomes[options["Biome"]]
-    chance = options["Replacement chance (%)"]
+    searchbiome = biomeids[options["Search for Biome"]]
+    replacebiome = biomeids[options["Replace with"]]
 
     minx = int(box.minx/16)*16
     minz = int(box.minz/16)*16
@@ -157,7 +216,7 @@ def perform(level, box, options):
     for x in xrange(minx, box.maxx, 16):
         for z in xrange(minz, box.maxz, 16):
             chunk = level.getChunk(x / 16, z / 16)
-
+            #chunk.decompress()
             chunk.dirty = True
             biomearray = chunk.root_tag["Level"]["Biomes"].value
 
@@ -166,9 +225,8 @@ def perform(level, box, options):
 
             for bx in xrange(max(box.minx, chunkx), min(box.maxx, chunkx+16)):
                 for bz in xrange(max(box.minz, chunkz), min(box.maxz, chunkz+16)):
-                    if randrange(100) < chance:
-                        idx = 16*(bz-chunkz)+(bx-chunkx)
-                        biomearray[idx] = biome
-
+                    idx = 16*(bz-chunkz)+(bx-chunkx)
+                    if biomearray[idx] == searchbiome:
+                        biomearray[idx] = replacebiome
 
             chunk.root_tag["Level"]["Biomes"].value = biomearray

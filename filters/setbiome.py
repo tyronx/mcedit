@@ -17,7 +17,7 @@ from numpy import zeros
 from random import randrange
 
 inputs = (
-    ("Biome", ("Desert",
+    ("Biome", (
         "Beach",
         "Birch Forest",
         "Birch Forest Hills",
